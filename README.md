@@ -1,7 +1,7 @@
 # Smart Team Task Manager
 
 > **Course:** Special Topics in Programming (مباحث ویژه در برنامه‌نویسی)  
-> **Assignment:** Chapter 3 — System Architecture & API Contract Design  
+> **Assignments:** Chapter 3 (Architecture & API) & Chapter 4 (Docker Containerization & CI)  
 > **Architecture Pattern:** Modular Monolith  
 > **Lead Architect & DevOps:** Habib Eghdami  
 
@@ -419,3 +419,71 @@ Deletes a task from the system.
 - **Token Security:** Short-lived JWT Access Tokens (1 hour) signed using `RS256` or `HS256` with strong secret rotation.
 - **Input Validation:** Strict DTO schema validation on all inputs before reaching domain service layers.
 - **Data Protection:** All endpoints enforce TLS 1.3 in transit and column-level encryption for sensitive tokens.
+
+---
+
+## 🐳 Docker Containerization (Chapter 4)
+
+The backend service is fully containerized using a hardened, non-root `python:3.11-slim` container image adhering to production Docker best practices.
+
+### 1. Build the Docker Image
+To package and build the container image locally:
+
+```bash
+docker build -t smart-task-api .
+```
+
+### 2. Run Container with Port Mapping
+Run the container in detached mode with host port `8000` mapped to container port `8000`:
+
+```bash
+docker run -d -p 8000:8000 --name smart-task-app smart-task-api
+```
+
+- `-d`: Run container in background (detached mode).
+- `-p 8000:8000`: Maps port `8000` on the host to port `8000` inside the container.
+- `--name smart-task-app`: Assigns a memorable container identifier.
+- `smart-task-api`: The target image name tagged during the build stage.
+
+### 3. Verify Container Status & Logs
+
+Check that the container is up and running healthy:
+```bash
+docker ps
+```
+
+Stream and verify runtime application logs:
+```bash
+docker logs smart-task-app
+```
+
+Follow logs in real-time:
+```bash
+docker logs -f smart-task-app
+```
+
+Verify the API health check endpoint:
+```bash
+curl http://localhost:8000/api/health
+```
+
+### 4. Stop and Remove Container
+When stopping and cleaning up the running container instance:
+```bash
+docker stop smart-task-app
+docker rm smart-task-app
+```
+
+---
+
+## 🚀 Continuous Integration (GitHub Actions)
+
+A GitHub Actions workflow is established in [`.github/workflows/docker-check.yml`](.github/workflows/docker-check.yml) to automatically verify the Docker build process on every push and pull request targeting the `main` branch.
+
+- **Trigger:** Push / Pull Request to `main`
+- **Runner:** `ubuntu-latest`
+- **Pipeline Stages:**
+  1. Repository Checkout (`actions/checkout@v4`)
+  2. Docker Buildx Setup (`docker/setup-buildx-action@v3`)
+  3. Container Build Verification (`docker build -t smart-task-api .`)
+
